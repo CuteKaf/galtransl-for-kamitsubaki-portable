@@ -1,58 +1,89 @@
+# GalTransl for Kamitsubaki Portable
 
-<p align="center">
-	<img src="icon.png" alt="Logo" width="160" />
-</p>
+一个面向神椿系长视频字幕处理的可迁移源码版工作仓库。
 
-<h1><p align='center' >VoiceTransl</p></h1>
-<div align=center><img src="https://img.shields.io/github/v/release/shinnpuru/VoiceTransl"/>   <img src="https://img.shields.io/github/license/shinnpuru/VoiceTransl"/>   <img src="https://img.shields.io/github/stars/shinnpuru/VoiceTransl"/></div>
+这个仓库保留了我当前整理好的自动化链路，重点是：
 
-VoiceTransl是一站式离线AI视频字幕生成和翻译软件，从视频下载，音频提取，听写打轴，字幕翻译，视频合成，字幕总结各个环节为翻译者提供便利。本项目基于[Galtransl](https://github.com/xd2333/GalTransl)，采用GPLv3许可。
+- 长视频日语 ASR
+- 字幕弱化检测
+- 坏段切片重跑
+- 重试失败后的保留并继续
+- GPT 主翻译 + 本地 Sakura 回退
+- headless 长期监听运行
 
-## 特色
+这个版本的目标不是打包即用，而是方便在别的电脑上快速复刻同一套工作流。
 
-* 支持多种翻译模型，包括在线模型（任意OpenAI兼容接口）和本地模型（Sakura、Galtransl及Ollama、Llamacpp）。
-* 支持AMD/NVIDIA/Intel GPU加速，翻译引擎支持调整显存占用。
-* 支持多种输入格式，包括音频、视频、SRT字幕。
-* 支持多种输出格式，包括SRT字幕、LRC字幕。
-* 支持多种语言，包括日语，英语，韩语，俄语，法语。
-* 支持VAD（语音活动检测），自动识别音频中的语音段落。
-* 支持字典功能，可以自定义翻译字典，替换输入输出。
-* 支持世界书/台本输入，可以自定义翻译参考资料。
-* 支持从YouTube/Bilibili及媒体链接直接下载视频。
-* 支持文件和链接批量处理，自动识别文件类型。
-* 支持音频切分，字幕合并和视频合成。
-* 支持视频总结，将视频内容总结为带时间轴简短的文本。
-* 支持人声分离，将人声和伴奏分离，支持多种模型。
+## 当前特性
 
-## 模式
+- 支持 `watch` 模式监听 `project/inbox`
+- 支持 `once` 模式单文件处理
+- 支持 Whisper ASR 后的质量检查
+- 支持识别连续重复字幕和单句字符刷屏
+- 支持坏段切片重跑与超长重复分块修复
+- 支持修复失败后保留裁剪结果继续流程，尽量保证任务最终完成
+- 支持 OpenAI 兼容接口作为主翻译
+- 支持在线接口反复 `503` 时自动回退到本地 Sakura
+- 支持后台运行并输出 `project/watch.log`
 
-本软件支持五种模式，分别是下载模式，翻译模式，听写模式，完整模式和工具模式。
+## 仓库定位
 
-1. 下载模式：支持从YouTube/Bilibili直接下载视频。请填写视频链接，语音识别选择不进行听写，字幕翻译选择不进行翻译，然后点击运行按钮。
-2. 翻译模式：支持字幕翻译，支持多种翻译模型。请填写字幕文件，语音识别选择不进行听写，字幕翻译选择模型，然后点击运行按钮。
-3. 听写模式：支持音频听写，支持多种听写模型。请填写音视频文件或视频链接，语音识别选择模型，字幕翻译选择不进行翻译，然后点击运行按钮。
-4. 完整模式：支持从下载到翻译的完整流程。请填写音视频文件或视频链接，语音识别选择模型，字幕翻译选择模型，然后点击运行按钮。
-5. 工具模式：支持音频分离，音频切分，字幕合并，视频合成和视频总结。请填写相应输入，选择工具，然后点击运行按钮。
+这是源码版 portable 仓库，不包含以下内容：
 
-<div align=center><img src="title.jpg" alt="title" style="width:512px;"/></div>
+- 私有 API key
+- 模型权重
+- 运行产物和缓存
+- 本地打包后的大二进制
 
-## 在线镜像
+你需要在自己的机器上准备运行时文件和模型。
 
-打开即用的AI翻译，与配置环境说拜拜，推荐大家使用优云智算算力租赁平台。万卡4090 超多好玩免费的镜像给大家免费体验,高性价比算力租赁平台,上市公司ucloud旗下，专业有保障。点击链接直达[镜像地址](https://www.compshare.cn/images/compshareImage-16qc028dgfoh?referral_code=1RFfR2FQ2FyEVRJMyrOn5d&ytag=GPU_YY-GH_simple)，使用说明请看
-[视频教程](https://b23.tv/qN9bDHi)。使用昕蒲邀请链接注册可得实名20增金+链接注册20+高校企业认证再得10，还可享95折，4090一小时只要1.98 ：[邀请链接](https://passport.compshare.cn/register?referral_code=1RFfR2FQ2FyEVRJMyrOn5d&ytag=simple_bilibili)
+## 快速开始
 
-## 下载地址
+1. 克隆仓库
+2. 安装 Python 依赖
+3. 准备运行时工具和模型
+4. 配置 `project/api_key.txt`
+5. 检查 `project/headless_config.yaml`
+6. 启动长期监听
 
-下载最新版本的[VoiceTransl](https://github.com/shinnpuru/VoiceTransl/releases/)，解压后运行`VoiceTransl.exe`。
+```bash
+bash run_server.sh
+```
 
-## 使用说明
+查看日志：
 
-使用说明请见 [视频教程](https://www.bilibili.com/video/BV1koZ6YuE1x)或者[Wiki说明](https://github.com/shinnpuru/VoiceTransl/wiki)。
+```bash
+tail -f project/watch.log
+```
 
-## 声明
+停止：
 
-本软件仅供学习交流使用，不得用于商业用途。本软件不对任何使用者的行为负责，不保证翻译结果的准确性。使用本软件即代表您同意自行承担使用本软件的风险，包括但不限于版权风险、法律风险等。请遵守当地法律法规，不要使用本软件进行任何违法行为。
+```bash
+bash stop_server.sh
+```
 
-## 如果对你有帮助的话请给一个Star!
+更完整的迁移说明见 [PORTABLE_SETUP.md](PORTABLE_SETUP.md)。
 
-![Star History Chart](https://api.star-history.com/svg?repos=shinnpuru/VoiceTransl&type=Date)
+## 目录说明
+
+- `headless_server.py`
+  当前主要的长期运行入口
+- `run_server.sh`
+  启动 watcher
+- `stop_server.sh`
+  停止 watcher
+- `project/headless_config.yaml`
+  headless 工作流配置
+- `project/config.yaml`
+  GalTransl 运行配置模板
+- `GalTransl/SubtitleQuality.py`
+  字幕弱化检测逻辑
+
+## 许可证与来源
+
+本仓库是基于上游项目二次整理和修改后的源码版工作仓库。
+
+- 上游之一：`VoiceTransl`
+- 上游基础：`GalTransl`
+
+由于上游代码链路受 GPLv3 约束，这个仓库继续沿用 GPLv3。  
+具体说明见 [NOTICE.md](NOTICE.md) 和 [LICENSE](LICENSE)。
