@@ -1,0 +1,44 @@
+paths:
+  inbox: project/inbox
+  processing: project/processing
+  outbox: project/outbox
+  done: project/done
+  failed: project/failed
+
+watch:
+  poll_interval: 5
+  stable_seconds: 90
+
+asr:
+  language: ja
+  cli_bin: whisper/whisper-src/build-cuda/bin/whisper-cli
+  model: whisper/ggml-large-v3.bin
+  vad_model: whisper/ggml-silero-v5.1.2.bin
+  threads: 16
+  repair_repeated_segments: true
+  repair_padding_seconds: 8
+  max_repair_attempts: 5
+  preserve_max_consecutive_repeats: 5
+  tail_repair_min_repeat_count: 50
+  tail_repair_min_duration_seconds: 900
+  tail_repair_chunk_seconds: 300
+
+translate:
+  enabled: true
+  provider: api
+  engine: gpt4
+  endpoint: https://api.asxs.top
+  model: "gpt-5.4"
+  proxy: ""
+
+local_llm:
+  server_bin: llama/llama-src/build-cuda/bin/llama-server
+  model: llama/Sakura-Galtransl-14B-v3.8-Q5_K_S.gguf
+  host: 127.0.0.1
+  port: 8989
+  threads: 16
+  ctx_size: 8192
+  gpu_layers: 999
+  startup_timeout: 180
+  log_file: project/llama_server.log
+  extra_args: []

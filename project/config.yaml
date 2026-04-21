@@ -1,0 +1,60 @@
+common:
+  saveLog: false
+  workersPerProject: 1
+  language: ja2zh-cn
+  linebreakSymbol: "\r\n"
+  skipRetry: false
+  retranslFail: false
+  retranslKey: ''
+  gpt.numPerRequestTranslate: 10
+  gpt.streamOutputMode: true
+  gpt.enableProofRead: false
+  gpt.numPerRequestProofRead: 7
+  gpt.recordConfidence: false
+  gpt.restoreContextMode: true
+  gpt.fullContextMode: false
+plugin:
+  filePlugin: file_galtransl_json
+  textPlugins:
+  - text_common_normalfix
+proxy:
+  enableProxy: false
+  proxies:
+  - address: http://127.0.0.1:7890
+dictionary:
+  defaultDictFolder: Dict
+  usePreDictInName: false
+  usePostDictInName: false
+  preDict:
+  - (project_dir)dict_pre.txt
+  gpt.dict:
+  - (project_dir)dict_gpt.txt
+  postDict:
+  - (project_dir)dict_after.txt
+backendSpecific:
+  GPT35:
+    tokens:
+    - token: sk-your-api-key-here
+      endpoint: ''
+    defaultEndpoint: https://api.asxs.top
+    rewriteModelName: gpt-5.4
+  GPT4:
+    tokens:
+    - token: sk-your-api-key-here
+      endpoint: ''
+    defaultEndpoint: https://api.asxs.top
+    rewriteModelName: gpt-5.4
+  Sakura:
+    endpoint: http://127.0.0.1:8989
+problemAnalyze:
+  problemList:
+  - 词频过高
+  - 标点错漏
+  - 残留日文
+  - 丢失换行
+  - 多加换行
+  - 比日文长
+  - 字典使用
+  arinashiDict:
+    aaa: bbb
+    ccc: ddd
