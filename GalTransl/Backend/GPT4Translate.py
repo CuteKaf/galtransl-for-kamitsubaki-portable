@@ -447,7 +447,7 @@ class CGPT4Translate:
             if repeat_issue:
                 start_offset = repeat_issue.start_index
                 source_slice = trans_list[
-                    start_offset : start_offset + repeat_issue.repeat_count
+                    start_offset : start_offset + repeat_issue.count
                 ]
                 normalized_source = {
                     normalize_subtitle_text(trans.post_jp) for trans in source_slice
@@ -455,7 +455,7 @@ class CGPT4Translate:
                 if len(normalized_source) > 1:
                     error_message = (
                         f"-> 第{source_slice[0].index}句开始连续"
-                        f"{repeat_issue.repeat_count}句译文完全相同: "
+                        f"{repeat_issue.count}句译文完全相同: "
                         f"{repeat_issue.text}"
                     )
                     LOGGER.error(f"-> 解析结果出错：{error_message}")
