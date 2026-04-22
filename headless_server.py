@@ -604,8 +604,15 @@ def should_use_chunked_repair(
     return issue.count >= min_repeat_count or issue.duration_seconds >= min_duration
 
 
+def repair_workspace_for(path: Path) -> Path:
+    parent = path.parent
+    while parent.name == "_repair":
+        parent = parent.parent
+    return parent / "_repair"
+
+
 def make_repair_temp_paths(srt_path: Path, tag: str) -> tuple[Path, Path, Path]:
-    repair_dir = srt_path.parent / "_repair"
+    repair_dir = repair_workspace_for(srt_path)
     repair_dir.mkdir(parents=True, exist_ok=True)
     short_id = uuid.uuid4().hex[:12]
     prefix = repair_dir / f"{tag}_{short_id}"
