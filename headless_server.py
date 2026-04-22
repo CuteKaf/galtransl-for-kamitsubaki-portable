@@ -554,7 +554,23 @@ def preserve_quality_issue_in_place(
     else:
         return issue
 
-    return inspect_srt_quality(srt_path)
+    return inspect_srt_quality_for_asr(srt_path, asr)
+
+
+def inspect_srt_quality_for_asr(srt_path: Path, asr: dict) -> SubtitleQualityIssue | None:
+    max_allowed_repeats = int(
+        asr.get(
+            "max_allowed_consecutive_repeats",
+            asr.get("preserve_max_consecutive_repeats", 5),
+        )
+    )
+    min_repeat = max_allowed_repeats + 1
+    char_repeat_limit = int(asr.get("max_allowed_char_repeats", 20))
+    return inspect_srt_quality(
+        srt_path,
+        min_repeat=min_repeat,
+        char_repeat_limit=char_repeat_limit,
+    )
 
 
 def run_whisper_cli(
@@ -700,7 +716,7 @@ def repair_degenerated_srt_segment(
             flush=True,
         )
         if accepted_repaired_issue is not None:
-            merged_issue = inspect_srt_quality(srt_path)
+            merged_issue = inspect_srt_quality_for_asr(srt_path, asr)
             return RepairOutcome(True, accepted_issue=merged_issue)
         return RepairOutcome(True)
     finally:
@@ -725,7 +741,7 @@ def repair_srt_quality_issues(
         if remaining_repair_attempts is None
         else max(0, remaining_repair_attempts)
     )
-    issue = inspect_srt_quality(srt_path)
+    issue = inspect_srt_quality_for_asr(srt_path, asr)
     repair_attempt = 0
     while issue and issue.kind in {"consecutive_repeat", "char_repeat"} and repair_attempt < max_repair_attempts:
         repair_attempt += 1
@@ -757,7 +773,7 @@ def repair_srt_quality_issues(
             break
         if repaired.accepted_issue is not None:
             return None, repaired.accepted_issue
-        issue = inspect_srt_quality(srt_path)
+        issue = inspect_srt_quality_for_asr(srt_path, asr)
 
     if issue and repair_attempt >= max_repair_attempts:
         preserved_issue = preserve_quality_issue_in_place(srt_path, issue, asr)
@@ -890,7 +906,7 @@ def repair_large_repeated_region(
     merge_repaired_subtitles(srt_path, replacement_subs, region_start, region_end)
     accepted_issue = None
     if preserved_chunk_count:
-        accepted_issue = inspect_srt_quality(srt_path)
+        accepted_issue = inspect_srt_quality_for_asr(srt_path, asr)
         print(
             "[ASR] chunked tail retry completed with preserved original content "
             f"for {preserved_chunk_count} chunk(s); continuing with current subtitle",
@@ -939,8 +955,8 @@ def count_srt_entries(srt_path: Path) -> int:
     return text.count("-->")
 
 
-def validate_srt_quality(srt_path: Path) -> None:
-    issue = inspect_srt_quality(srt_path)
+def validate_srt_quality(srt_path: Path, asr: dict) -> None:
+    issue = inspect_srt_quality_for_asr(srt_path, asr)
     if issue is None:
         return
     raise RuntimeError(f"SRT quality check failed: {format_quality_issue(issue)}")
@@ -1211,7 +1227,7 @@ def process_file(
                 flush=True,
             )
         else:
-            validate_srt_quality(original_srt)
+            validate_srt_quality(original_srt, cfg.get("asr", {}))
 
         jp_srt_out = output_dir / f"{processing_path.stem}.srt"
         shutil.copy2(original_srt, jp_srt_out)

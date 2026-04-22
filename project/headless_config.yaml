@@ -18,6 +18,7 @@ asr:
   repair_repeated_segments: true
   repair_padding_seconds: 8
   max_repair_attempts: 5
+  max_allowed_consecutive_repeats: 5
   preserve_max_consecutive_repeats: 5
   tail_repair_min_repeat_count: 50
   tail_repair_min_duration_seconds: 900
