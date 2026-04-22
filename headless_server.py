@@ -626,6 +626,7 @@ def repair_degenerated_srt_segment(
     asr: dict,
     asr_ld_paths: list[Path],
     total_duration: float,
+    remaining_repair_attempts: int,
 ) -> RepairOutcome:
     if issue.kind not in {"consecutive_repeat", "char_repeat"}:
         return RepairOutcome(False)
@@ -681,6 +682,7 @@ def repair_degenerated_srt_segment(
             clip_end - clip_start,
             allow_chunked_repair=True,
             context_label="ASR clipped retry",
+            remaining_repair_attempts=remaining_repair_attempts,
         )
         if repaired_issue:
             print(
@@ -715,8 +717,14 @@ def repair_srt_quality_issues(
     *,
     allow_chunked_repair: bool,
     context_label: str = "ASR",
+    remaining_repair_attempts: int | None = None,
 ) -> tuple[SubtitleQualityIssue | None, SubtitleQualityIssue | None]:
-    max_repair_attempts = int(asr.get("max_repair_attempts", 5))
+    configured_repair_attempts = int(asr.get("max_repair_attempts", 5))
+    max_repair_attempts = (
+        configured_repair_attempts
+        if remaining_repair_attempts is None
+        else max(0, remaining_repair_attempts)
+    )
     issue = inspect_srt_quality(srt_path)
     repair_attempt = 0
     while issue and issue.kind in {"consecutive_repeat", "char_repeat"} and repair_attempt < max_repair_attempts:
@@ -743,6 +751,7 @@ def repair_srt_quality_issues(
                 asr,
                 asr_ld_paths,
                 total_duration,
+                max_repair_attempts - repair_attempt,
             )
         if not repaired.handled:
             break
