@@ -3,6 +3,7 @@ CloseAI related classes
 """
 
 import importlib.util
+import os
 import httpx
 from httpx import AsyncClient
 from tqdm.asyncio import tqdm
@@ -36,6 +37,31 @@ def can_use_proxy_url(proxy_value: str | None) -> bool:
     if proxy_value.startswith("socks5://") and importlib.util.find_spec("socksio") is None:
         return False
     return True
+
+
+def proxy_candidates(proxy_value: str | None) -> list[str]:
+    values = [
+        proxy_value,
+        os.environ.get("HTTPS_PROXY"),
+        os.environ.get("https_proxy"),
+        os.environ.get("HTTP_PROXY"),
+        os.environ.get("http_proxy"),
+        os.environ.get("ALL_PROXY"),
+        os.environ.get("all_proxy"),
+    ]
+    candidates: list[str] = []
+    for value in values:
+        normalized = normalize_proxy_url(value)
+        if normalized and normalized not in candidates:
+            candidates.append(normalized)
+    return candidates
+
+
+def resolve_proxy_url(proxy_value: str | None) -> str | None:
+    for candidate in proxy_candidates(proxy_value):
+        if can_use_proxy_url(candidate):
+            return candidate
+    return None
 
 
 class COpenAIToken:
@@ -124,10 +150,8 @@ class COpenAITokenPool:
         # todo: do not remove token directly, we can score the token
         try:
             st = time()
-            proxy_value = normalize_proxy_url(proxy.addr if proxy else None)
-            trust_env = False
-            if not can_use_proxy_url(proxy_value):
-                proxy_value = None
+            proxy_value = resolve_proxy_url(proxy.addr if proxy else None)
+            trust_env = proxy_value is None
             try:
                 kwargs = {
                     "trust_env": trust_env,

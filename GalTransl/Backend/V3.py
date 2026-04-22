@@ -64,6 +64,29 @@ class Chatbot:
             return False
         return True
 
+    def _proxy_candidates(self, proxy: str | None) -> list[str]:
+        values = [
+            proxy,
+            os.environ.get("HTTPS_PROXY"),
+            os.environ.get("https_proxy"),
+            os.environ.get("HTTP_PROXY"),
+            os.environ.get("http_proxy"),
+            os.environ.get("ALL_PROXY"),
+            os.environ.get("all_proxy"),
+        ]
+        candidates: list[str] = []
+        for value in values:
+            normalized = self._normalize_proxy(value)
+            if normalized and normalized not in candidates:
+                candidates.append(normalized)
+        return candidates
+
+    def _resolve_proxy(self, proxy: str | None) -> str | None:
+        for candidate in self._proxy_candidates(proxy):
+            if self._can_use_proxy(candidate):
+                return candidate
+        return None
+
     def _uses_local_endpoint(self) -> bool:
         try:
             host = (urlparse(self.api_address).hostname or "").lower()
@@ -77,16 +100,8 @@ class Chatbot:
         trust_env = not use_local_bypass
 
         if not use_local_bypass:
-            resolved_proxy = (
-                proxy
-                or os.environ.get("all_proxy")
-                or os.environ.get("ALL_PROXY")
-                or None
-            )
-            resolved_proxy = self._normalize_proxy(resolved_proxy)
-            if not self._can_use_proxy(resolved_proxy):
-                resolved_proxy = None
-                trust_env = False
+            resolved_proxy = self._resolve_proxy(proxy)
+            trust_env = resolved_proxy is None
 
         self.proxy = resolved_proxy or ""
         self.session.trust_env = trust_env
