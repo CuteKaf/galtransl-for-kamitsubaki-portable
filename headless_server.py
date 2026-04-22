@@ -8,6 +8,7 @@ import shutil
 import subprocess
 import threading
 import time
+import uuid
 from itertools import groupby
 from datetime import datetime
 from pathlib import Path
@@ -603,6 +604,14 @@ def should_use_chunked_repair(
     return issue.count >= min_repeat_count or issue.duration_seconds >= min_duration
 
 
+def make_repair_temp_paths(srt_path: Path, tag: str) -> tuple[Path, Path, Path]:
+    repair_dir = srt_path.parent / "_repair"
+    repair_dir.mkdir(parents=True, exist_ok=True)
+    short_id = uuid.uuid4().hex[:12]
+    prefix = repair_dir / f"{tag}_{short_id}"
+    return prefix.with_suffix(".wav"), prefix, prefix.with_suffix(".srt")
+
+
 def repair_degenerated_srt_segment(
     wav_path: Path,
     srt_path: Path,
@@ -620,10 +629,7 @@ def repair_degenerated_srt_segment(
     if clip_end <= clip_start:
         return RepairOutcome(False)
 
-    repair_base = srt_path.with_suffix("")
-    clip_wav = Path(f"{repair_base}.repair.wav")
-    clip_prefix = Path(f"{repair_base}.repair")
-    clip_srt = Path(f"{clip_prefix}.srt")
+    clip_wav, clip_prefix, clip_srt = make_repair_temp_paths(srt_path, "clip")
 
     issue_label = "repeated subtitle segment" if issue.kind == "consecutive_repeat" else "subtitle quality issue"
     print(
@@ -767,7 +773,6 @@ def repair_large_repeated_region(
     if region_end <= region_start:
         return RepairOutcome(False)
 
-    repair_base = srt_path.with_suffix("")
     total_chunks = max(1, int((region_end - region_start + chunk_seconds - 1) // chunk_seconds))
     replacement_subs = pysrt.SubRipFile()
     original_subs = pysrt.open(str(srt_path), encoding="utf-8")
@@ -786,9 +791,7 @@ def repair_large_repeated_region(
         extract_start = max(region_start, core_start - padding_seconds)
         extract_end = min(region_end, core_end + padding_seconds)
         chunk_tag = f"tail{chunk_index + 1:02d}"
-        chunk_wav = Path(f"{repair_base}.{chunk_tag}.repair.wav")
-        chunk_prefix = Path(f"{repair_base}.{chunk_tag}.repair")
-        chunk_srt = Path(f"{chunk_prefix}.srt")
+        chunk_wav, chunk_prefix, chunk_srt = make_repair_temp_paths(srt_path, chunk_tag)
         chunk_duration = extract_end - extract_start
 
         print(
