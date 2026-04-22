@@ -31,6 +31,7 @@ translate:
   endpoint: https://api.asxs.top
   model: "gpt-5.4"
   proxy: ""
+  allow_local_fallback: false
 
 local_llm:
   server_bin: llama/llama-src/build-cuda/bin/llama-server

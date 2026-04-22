@@ -68,6 +68,9 @@ def is_local_translation(cfg: dict) -> bool:
 
 
 def has_local_fallback(cfg: dict) -> bool:
+    translate = cfg.get("translate", {})
+    if not bool(translate.get("allow_local_fallback", True)):
+        return False
     local_cfg = cfg.get("local_llm", {})
     return bool(local_cfg.get("server_bin")) and bool(local_cfg.get("model"))
 
