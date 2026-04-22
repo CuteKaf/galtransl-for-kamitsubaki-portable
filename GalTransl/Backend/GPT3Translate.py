@@ -243,11 +243,16 @@ class CGPT35Translate:
                 str_ex = str(ex).lower()
                 LOGGER.error(f"-> {str_ex}")
                 service_unavailable_markers = (
+                    "bad gateway",
                     "service unavailable",
                     "service_unavailable",
+                    "502",
                     "503",
+                    "cloudflare",
+                    "host error",
                     "全部渠道不可提供当前模型",
                     "所有供应商暂时不可用",
+                    "服务暂时不可用",
                 )
                 if any(marker.lower() in str_ex for marker in service_unavailable_markers):
                     service_unavailable_retry_count += 1
