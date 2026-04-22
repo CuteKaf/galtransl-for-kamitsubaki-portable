@@ -150,11 +150,13 @@ def sync_project_config(cfg: dict, api_key: str | None = None) -> None:
             raise RuntimeError("API translation selected but no API key provided")
         endpoint = translate.get("endpoint", "https://api.deepseek.com").rstrip("/")
         model_name = translate.get("model", "deepseek-chat")
+        api_mode = translate.get("api", "chat-completions")
         for section_name in ("GPT35", "GPT4"):
             section = backend.setdefault(section_name, {})
             section["tokens"] = [{"token": api_key, "endpoint": ""}]
             section["defaultEndpoint"] = endpoint
             section["rewriteModelName"] = model_name
+            section["api"] = api_mode
 
     proxy = project_cfg.setdefault("proxy", {})
     proxy["enableProxy"] = bool(proxy_addr) and not is_local

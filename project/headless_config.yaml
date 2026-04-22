@@ -27,6 +27,7 @@ asr:
 translate:
   enabled: true
   provider: api
+  api: openai-responses
   engine: gpt4
   endpoint: https://api.asxs.top
   model: "gpt-5.4"

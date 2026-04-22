@@ -127,7 +127,14 @@ class CGPT4Translate:
         pass
 
     def init_chatbot(self, eng_type, config):
-        eng_name = config.getBackendConfigSection("GPT4").get("rewriteModelName", "")
+        backend_config = config.getBackendConfigSection("GPT4")
+        eng_name = backend_config.get("rewriteModelName", "")
+        api_path = (
+            "/v1/responses"
+            if str(backend_config.get("api", "")).lower() == "openai-responses"
+            else "/v1/chat/completions"
+        )
+        self.api_path = api_path
         if eng_type == "gpt4":
 
             self.token = self.tokenProvider.getToken(False, True)
@@ -137,7 +144,7 @@ class CGPT4Translate:
                 temperature=0.4,
                 system_prompt=GPT4_SYSTEM_PROMPT,
                 engine=eng_name,
-                api_address=self.token.domain + "/v1/chat/completions",
+                api_address=self.token.domain + self.api_path,
                 timeout=30,
             )
             self.chatbot.trans_prompt = GPT4_TRANS_PROMPT
@@ -155,7 +162,7 @@ class CGPT4Translate:
                 temperature=0.4,
                 system_prompt=system_prompt,
                 engine=eng_name,
-                api_address=self.token.domain + "/v1/chat/completions",
+                api_address=self.token.domain + self.api_path,
                 timeout=30,
                 response_format="json",
             )
@@ -221,7 +228,7 @@ class CGPT4Translate:
                     self.token = self.tokenProvider.getToken(False, True)
                     self.chatbot.set_api_key(self.token.token)
                     self.chatbot.set_api_addr(
-                        f"{self.token.domain}/v1/chat/completions"
+                        f"{self.token.domain}{self.api_path}"
                     )
                 # LOGGER.info("->输入：\n" + prompt_req + "\n")
                 LOGGER.info(
@@ -237,7 +244,8 @@ class CGPT4Translate:
                         if self.streamOutputMode:
                             print(data, end="", flush=True)
                         resp += data
-                    print(data, end="\n")
+                    if self.streamOutputMode:
+                        print("")
                 elif self.eng_type == "unoffapi":
                     async for data in self.chatbot.ask_async(prompt_req):
                         if self.streamOutputMode:

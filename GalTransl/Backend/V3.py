@@ -94,6 +94,31 @@ class Chatbot:
             host = self.api_address.lower()
         return host in {"127.0.0.1", "localhost", "::1"}
 
+    def _uses_responses_api(self) -> bool:
+        try:
+            path = (urlparse(self.api_address).path or "").rstrip("/")
+        except Exception:
+            path = self.api_address.rstrip("/")
+        return path.endswith("/responses")
+
+    def _extract_responses_text(self, payload: dict) -> str:
+        if text := payload.get("output_text"):
+            return text
+
+        chunks: list[str] = []
+        for item in payload.get("output", []):
+            for content in item.get("content", []):
+                if content.get("type") == "output_text":
+                    chunks.append(content.get("text", ""))
+        return "".join(chunks)
+
+    def _responses_payload(self, convo_id: str) -> dict:
+        return {
+            "model": self.engine,
+            "input": self.conversation[convo_id],
+            "store": False,
+        }
+
     def update_proxy(self, proxy: str) -> None:
         use_local_bypass = self._uses_local_endpoint()
         resolved_proxy = None
@@ -341,6 +366,23 @@ class Chatbot:
         self.__truncate_conversation(convo_id=convo_id)
         # Get response
         self.api_address = handle_special_api(self.api_address)
+        if self._uses_responses_api():
+            response = await self.aclient.post(
+                self.api_address,
+                headers={"Authorization": f"Bearer {kwargs.get('api_key', self.api_key)}"},
+                json=self._responses_payload(convo_id),
+                timeout=kwargs.get("timeout", self.timeout),
+            )
+            if response.status_code != 200:
+                raise t.APIConnectionError(
+                    f"{response.status_code} {response.reason_phrase} {response.text}",
+                )
+            full_response = self._extract_responses_text(response.json())
+            if full_response:
+                yield full_response
+            self.add_to_conversation(full_response, "assistant", convo_id=convo_id)
+            return
+
         async with self.aclient.stream(
             "post",
             self.api_address,
