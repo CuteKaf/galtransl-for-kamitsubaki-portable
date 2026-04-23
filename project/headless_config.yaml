@@ -30,7 +30,7 @@ translate:
   api: openai-responses
   engine: gpt4
   endpoint: https://api.asxs.top
-  model: "gpt-5.4"
+  model: "gpt-5.4-mini"
   proxy: ""
   allow_local_fallback: false
 

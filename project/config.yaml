@@ -34,16 +34,18 @@ dictionary:
 backendSpecific:
   GPT35:
     tokens:
-    - token: sk-your-api-key-here
+    - token: sk-6ab00517377e840f402cfc891259375d
       endpoint: ''
     defaultEndpoint: https://api.asxs.top
-    rewriteModelName: gpt-5.4
+    rewriteModelName: gpt-5.4-mini
+    api: openai-responses
   GPT4:
     tokens:
-    - token: sk-your-api-key-here
+    - token: sk-6ab00517377e840f402cfc891259375d
       endpoint: ''
     defaultEndpoint: https://api.asxs.top
-    rewriteModelName: gpt-5.4
+    rewriteModelName: gpt-5.4-mini
+    api: openai-responses
   Sakura:
     endpoint: http://127.0.0.1:8989
 problemAnalyze:
